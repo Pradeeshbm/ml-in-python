@@ -9,7 +9,6 @@ The dataset for this model has been downloaded from Kaggle - https://www.kaggle.
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from collections import Counter
 
@@ -17,7 +16,7 @@ from collections import Counter
 class KNearestNeighbours:
 
     def __init__(self, k = 5):
-        self.k = 5
+        self.k = k
 
     def fit(self, x, y):
         self.ds = np.column_stack((x, y))
