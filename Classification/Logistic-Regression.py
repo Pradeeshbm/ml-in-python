@@ -12,7 +12,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-class Logistic_Regression:
+class LogisticRegression:
 
     def __init__(self, alpha = 0.05, epochs = 10000):
         self.alpha = alpha
@@ -55,7 +55,7 @@ class Logistic_Regression:
 
 
 # Load dataset
-dataset = pd.read_csv('haberman.csv')
+dataset = pd.read_csv('data/haberman.csv')
 x = dataset.iloc[:, 0:3].values
 y = dataset.survival_status.replace([1, 2], [1, 0]).values.reshape(x.shape[0], 1)
 
@@ -69,7 +69,7 @@ from sklearn.model_selection import train_test_split
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
 # Fit the training set into model
-classifier = Logistic_Regression()
+classifier = LogisticRegression()
 costs, w, b = classifier.fit(x_train, y_train)
 
 # Make Prediction on Test set
