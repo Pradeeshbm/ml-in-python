@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 
 from collections import Counter
 
+
 class KNearestNeighbours:
 
     def __init__(self, k = 5):
@@ -22,9 +23,10 @@ class KNearestNeighbours:
         self.ds = np.column_stack((x, y))
 
     def __euclidean_distance(self, x1, x2):
-        np.sqrt(sum([np.square(x1i - x2i) for x1i, x2i in zip(x1, x2)]))
+        return np.sqrt(np.square(x1 - x2).sum())
 
-    def predict(self, x):
+    # Method to find prediction on a single example
+    def __single_predict(self, x):
         distance_arr = np.zeros(shape = (self.ds.shape[0], 2))
         for i, dsi in enumerate(self.ds):
             distance = self.__euclidean_distance(x, dsi[:-1])
@@ -32,16 +34,32 @@ class KNearestNeighbours:
 
         # Sort the euclidean distances using merge sort
         distance_arr = distance_arr[distance_arr[:, 0].argsort(kind = 'mergesort')]
-        k_neighbours = distance_arr[self.k, :]
+        k_neighbours = distance_arr[:self.k, 1]
+
         return self.__get_majority(k_neighbours)
 
+    # Method to find prediction on batch example
+    def predict(self, x):
+        y_pred = np.zeros(x.shape[0])
+
+        for j, xi in enumerate(x):
+            y_pred[j] = self.__single_predict(xi)
+        return y_pred
+
+    # Method returns most frequent class
     def __get_majority(self, neighbours):
-        return Counter(neighbours[1]).most_common()[0][1]
+        return Counter(neighbours).most_common()[0][0]
+
 
 # Load dataset
 dataset = pd.read_csv('data/iris_data.csv')
 x = dataset.iloc[:, 0:3].values
-y = dataset.species.replace([1, 2], [1, 0]).values.reshape(x.shape[0], 1)
+y_labeled = dataset.species.replace([1, 2], [1, 0]).values.reshape(x.shape[0], 1)
+
+# Encode target variable
+from sklearn.preprocessing import LabelEncoder
+encoder = LabelEncoder()
+y = encoder.fit_transform(y_labeled)
 
 # Standardize the data
 from sklearn.preprocessing import StandardScaler
@@ -57,13 +75,15 @@ classifier = KNearestNeighbours()
 classifier.fit(x_train, y_train)
 
 # Make Prediction on Test set
-y_pred = classifier.predict(x_test[0])
+y_pred = classifier.predict(x_test)
 
 # Model Accuracy
 from sklearn.metrics import accuracy_score
 print("Accuracy: ", accuracy_score(y_test, y_pred))
 
+# Compare our model accuracy with Scikit Learn library
 from sklearn.neighbors import KNeighborsClassifier
 c = KNeighborsClassifier()
 c.fit(x_train, y_train)
 y_pred_c = c.predict(x_test)
+print("Accuracy Using Scikit Learn: ", accuracy_score(y_test, y_pred_c))
