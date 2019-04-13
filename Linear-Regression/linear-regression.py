@@ -43,6 +43,8 @@ class LinearRegression:
     def predict(self, x):
         return np.dot(x, self.w.T) + self.b
 
+
+
 # Load dataset
 dataset = pd.read_csv('lenght_of_fish.csv')
 x = dataset.iloc[:, 1:3].values
