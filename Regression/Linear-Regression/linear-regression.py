@@ -14,8 +14,9 @@ import matplotlib.pyplot as plt
 
 class LinearRegression:
 
-    def __init__(self):
-        pass
+    def __init__(self, alpha=0.05, epochs=5000):
+        self.alpha = alpha
+		self.epochs = epochs
 
     def __init_params(self, n_weights):
         self.w = np.random.rand(1, n_weights)
@@ -24,19 +25,19 @@ class LinearRegression:
     def __cost(self, y_true, y_pred):
         return np.square(y_pred - y_true).sum() / (2 * len(y_true))
 
-    def fit(self, x, y, alpha=0.05, epochs=5000):
+    def fit(self, x, y):
         self.__init_params(x.shape[1])
         n = x.shape[0]
-        costs = np.zeros(epochs)
-        for i in range(epochs):
+        costs = np.zeros(self.epochs)
+        for i in range(self.epochs):
             # Compute Cost and loss
             y_pred = self.predict(x)
             costs[i] = self.__cost(y, y_pred)
             loss = y_pred - y
 
             # Update parameters
-            self.w = self.w - (alpha / (2 * n)) * np.sum(x * loss, axis=0, keepdims=True)
-            self.b = self.b - (alpha / (2 * n)) * loss.sum()
+            self.w = self.w - (self.alpha / (2 * n)) * np.sum(x * loss, axis=0, keepdims=True)
+            self.b = self.b - (self.alpha / (2 * n)) * loss.sum()
 
         return costs, self.w, self.b
 
