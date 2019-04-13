@@ -15,24 +15,45 @@ class GaussianNBClassifier:
     def __init__(self):
         pass
 
-    def __cost(self, y_true, y_pred):
-        pass
+    '''
+    Method returns mean, variance for each class and for each independent features.
+        example: param_map = {
+            'class_1': ([c1_mean_x1, c1_mean_x2, c1_mean_x3, ..., c1_mean_xj], [c1_var_x1, c1_var_x2, c1_var_x3, ..., c1_var_xj]),
+            'class_2': ([c2_mean_x1, c2_mean_x2, c2_mean_x3, ..., c2_mean_xj], [c2_var_x1, c2_var_x2, c2_var_x3, ..., c2_var_xj]),
+            .
+            .
+            'class_n': ([cn_mean_x1, cn_mean_x2, cn_mean_x3, ..., cn_mean_xj], [cn_var_x1, cn_var_x2, cn_var_x3, ..., cn_var_xj]),
+    '''
+    def __populate_param_map(self, ds, unique_classes):
+        param_map = {}
+        for c in unique_classes:
+            class_filtered = (ds[ds[-1] == c][:, :-1])
+            param_map[c] = (np.mean(class_filtered, axis = 0), np.var(class_filtered.var(), axis = 0))
+
+        return param_map
 
     def fit(self, x, y):
-        pass
+        unique_classes = np.unique(y)
+        ds = np.column_stack((x, y))
+        param_map = self.__populate_param_map(ds, unique_classes)
 
     def predict(self, x):
-        pass
+        
 
 
 # Load dataset
-dataset = pd.read_csv('data/irish_data.csv')
+dataset = pd.read_csv('data/iris_data.csv')
 x = dataset.iloc[:, 0:3].values
-y = dataset.survival_status.replace([1, 2], [1, 0]).values.reshape(x.shape[0], 1)
+y_labeled = dataset.iloc[:, 4].values
+
+# Encode target variable
+from sklearn.preprocessing import LabelEncoder
+encoder = LabelEncoder()
+y = encoder.fit_transform(y_labeled)
 
 # Standardize the data
-from sklearn.preprocessing import StandardScaler
-sc = StandardScaler()
+from sklearn.preprocessing import MinMaxScaler
+sc = MinMaxScaler()
 x = sc.fit_transform(x)
 
 # Split the data into training and test set
@@ -41,7 +62,7 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
 # Fit the training set into model
 classifier = GaussianNBClassifier()
-classifier.fit(x_train, y_train)
+ds = classifier.fit(x_train, y_train)
 
 # Make Prediction on Test set
 y_pred = classifier.predict(x_test)

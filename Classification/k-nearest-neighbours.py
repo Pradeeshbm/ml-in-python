@@ -21,6 +21,7 @@ class KNearestNeighbours:
     def fit(self, x, y):
         self.ds = np.column_stack((x, y))
 
+    # Method to calculate Euclidean distance of two vectors
     def __euclidean_distance(self, x1, x2):
         return np.sqrt(np.square(x1 - x2).sum())
 
@@ -53,7 +54,7 @@ class KNearestNeighbours:
 # Load dataset
 dataset = pd.read_csv('data/iris_data.csv')
 x = dataset.iloc[:, 0:3].values
-y_labeled = dataset.species.replace([1, 2], [1, 0]).values.reshape(x.shape[0], 1)
+y_labeled = dataset.iloc[:, 4].values
 
 # Encode target variable
 from sklearn.preprocessing import LabelEncoder
