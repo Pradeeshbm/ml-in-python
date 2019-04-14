@@ -8,7 +8,7 @@ The dataset for this model has been downloaded from Kaggle - https://www.kaggle.
 """
 import numpy as np
 import pandas as pd
-
+from scipy.stats import norm
 
 class GaussianNBClassifier:
 
@@ -27,23 +27,49 @@ class GaussianNBClassifier:
     def __populate_param_map(self, ds, unique_classes):
         param_map = {}
         for c in unique_classes:
-            class_filtered = (ds[ds[-1] == c][:, :-1])
-            param_map[c] = (np.mean(class_filtered, axis = 0), np.var(class_filtered.var(), axis = 0))
+            # Filter dataset by class, remove the class column from filtered data
+            class_filtered = ds[ds[:, -1] == c][:, :-1]
+            param_map[c] = (np.mean(class_filtered, axis=0), np.var(class_filtered, axis=0))
 
         return param_map
 
+    # Method concatenates x and y in column axis in order to compute parameter easily.
     def fit(self, x, y):
-        unique_classes = np.unique(y)
+        self.unique_classes = np.unique(y)
         ds = np.column_stack((x, y))
-        param_map = self.__populate_param_map(ds, unique_classes)
+        self.param_map = self.__populate_param_map(ds, self.unique_classes)
 
+    # Method calculates gaussian probability distribution on given x with mean and variance of calculated parameter in fit method
     def predict(self, x):
-        
+        class_probability_dict = {}
+        for c in self.unique_classes:
+            class_probability_dict[c] = np.prod(self.__gaussian_distribution(self.param_map[c][0], self.param_map[c][1], x), axis=1)
+            class_probability_dict[c] = np.prod(norm.pdf(self.param_map[c][0], self.param_map[c][1], x), axis = 1)
+        return class_probability_dict
 
+    # Function to calculate probability density function
+    def __gaussian_distribution(self, mean, var, x):
+        a = 1 / np.sqrt(2 * np.pi * var)
+        numerator = -np.square(x - mean)
+        denominator = 2 * var
+        b = np.exp(numerator / denominator)
+
+        return a * b
+
+def g(mean, var, x):
+    a = 1 / np.sqrt(2 * np.pi * var)
+    numerator = -np.square(x - mean)
+    denominator = 2 * var
+    b = np.exp(numerator / denominator)
+
+    return a * b
+
+def f(m, v, a):
+    return m + v + a
 
 # Load dataset
 dataset = pd.read_csv('data/iris_data.csv')
-x = dataset.iloc[:, 0:3].values
+x = dataset.iloc[:, 0:4].values
 y_labeled = dataset.iloc[:, 4].values
 
 # Encode target variable
@@ -62,7 +88,7 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
 # Fit the training set into model
 classifier = GaussianNBClassifier()
-ds = classifier.fit(x_train, y_train)
+classifier.fit(x_train, y_train)
 
 # Make Prediction on Test set
 y_pred = classifier.predict(x_test)
