@@ -8,7 +8,6 @@ The dataset for this model has been downloaded from Kaggle - https://www.kaggle.
 """
 import numpy as np
 import pandas as pd
-from scipy.stats import norm
 
 class GaussianNBClassifier:
 
@@ -44,8 +43,9 @@ class GaussianNBClassifier:
         class_probability_dict = {}
         for c in self.unique_classes:
             class_probability_dict[c] = np.prod(self.__gaussian_distribution(self.param_map[c][0], self.param_map[c][1], x), axis=1)
-            class_probability_dict[c] = np.prod(norm.pdf(self.param_map[c][0], self.param_map[c][1], x), axis = 1)
-        return class_probability_dict
+
+
+        return pd.DataFrame(class_probability_dict)
 
     # Function to calculate probability density function
     def __gaussian_distribution(self, mean, var, x):
