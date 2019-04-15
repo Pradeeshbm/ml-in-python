@@ -44,28 +44,14 @@ class GaussianNBClassifier:
         for c in self.unique_classes:
             class_probability_dict[c] = np.prod(self.__gaussian_distribution(self.param_map[c][0], self.param_map[c][1], x), axis=1)
 
-
-        return pd.DataFrame(class_probability_dict)
+        return np.argmax(pd.DataFrame(class_probability_dict).values, axis=1)
 
     # Function to calculate probability density function
     def __gaussian_distribution(self, mean, var, x):
         a = 1 / np.sqrt(2 * np.pi * var)
-        numerator = -np.square(x - mean)
-        denominator = 2 * var
-        b = np.exp(numerator / denominator)
-
+        b = np.exp(-np.square(x - mean) / (2 * var))
         return a * b
 
-def g(mean, var, x):
-    a = 1 / np.sqrt(2 * np.pi * var)
-    numerator = -np.square(x - mean)
-    denominator = 2 * var
-    b = np.exp(numerator / denominator)
-
-    return a * b
-
-def f(m, v, a):
-    return m + v + a
 
 # Load dataset
 dataset = pd.read_csv('data/iris_data.csv')
@@ -78,8 +64,8 @@ encoder = LabelEncoder()
 y = encoder.fit_transform(y_labeled)
 
 # Standardize the data
-from sklearn.preprocessing import MinMaxScaler
-sc = MinMaxScaler()
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
 x = sc.fit_transform(x)
 
 # Split the data into training and test set
@@ -98,7 +84,7 @@ from sklearn.metrics import accuracy_score
 print("Accuracy: ", accuracy_score(y_test, y_pred))
 
 # Compare our model accuracy with Scikit Learn library
-from sklearn.naive_bayes import  GaussianNB
+from sklearn.naive_bayes import GaussianNB
 c = GaussianNB()
 c.fit(x_train, y_train)
 y_pred_c = c.predict(x_test)
