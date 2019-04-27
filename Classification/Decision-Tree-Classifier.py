@@ -149,7 +149,7 @@ print("Accuracy: ", accuracy_score(y_test, y_pred))
 
 # Compare our model accuracy with Scikit Learn library
 from sklearn.tree import DecisionTreeClassifier as DTC
-c = DTC
+c = DTC()
 c.fit(x_train, y_train)
 y_pred_c = c.predict(x_test)
 print("Accuracy Using Scikit Learn: ", accuracy_score(y_test, y_pred_c))
