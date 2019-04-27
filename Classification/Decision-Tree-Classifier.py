@@ -26,25 +26,7 @@ class Criteria:
         val = example[self.column]
         if is_numeric(val):
             return val >= self.value
-        return value == self.value
-
-    def __repr__(self):
-        condition = '=='
-        if is_numeric(self.value):
-            condition = '>='
-        return ('is %s %s %s?' % header[self.value], condition, str(self.value))
-
-
-def partition(dataset, criteria):
-    true_rows, false_rows = [], []
-    for example in dataset:
-        if criteria.match(example):
-            true_rows.append(example)
-        else:
-            false_rows.append(example)
-
-    return true_rows, false_rows
-
+        return val == self.value
 
 class DecisionNode:
 
@@ -63,49 +45,8 @@ def class_count(rows):
         counts[label] = counts[label] + 1
     return counts
 
-
-def gini(dataset):
-    class_count = class_count(dataset)
-    prob_of_label = 0
-    for lbl in class_count:
-        prob_of_label = prob_of_label + (class_count[lbl] / float(len(dataset))) ** 2
-
-    return prob_of_label
-
 def is_numeric(value):
     return isinstance(value, int) or isinstance(value, float)
-
-def find_best_criteria(dataset):
-    col_count = len(dataset[0]) - 1
-    best_criteria = None
-    best_score = 0
-
-    for col in range(col_count):
-        distinct_value = set([ex[col] for ex in dataset])
-        for val in distinct_value:
-            criteria = Criteria(col, val)
-            true_rows, false_rows = partition(dataset, criteria)
-            if len(true_rows) == 0 or len(false_rows) == 0:
-                continue
-            partition_1_score = gini(true_rows)
-            partition_2_score = gini(false_rows)
-            weighted_score = len(true_rows) / len(dataset) * partition_1_score + len(false_rows) /  len(dataset) * partition_2_score
-            if weighted_score > best_score:
-                best_criteria = criteria
-                best_score = weighted_score
-
-    return best_score, best_criteria
-
-def build_tree(dataset):
-    best_score, best_criteria = find_best_criteria(dataset)
-    if best_score == 0:
-        return Leaf(dataset)
-
-    true_rows, false_rows = partition(dataset, best_criteria)
-    true_branch = build_tree(true_rows)
-    false_branch = build_tree(false_rows)
-
-    return DecisionNode(best_criteria, true_branch, false_branch)
 
 
 class DecisionTreeClassifier:
@@ -113,14 +54,67 @@ class DecisionTreeClassifier:
     def __init__(self):
         pass
 
+    def __build_tree(self, dataset):
+        best_score, best_criteria = self.__find_best_criteria(dataset)
+        if best_score == 0:
+            return Leaf(dataset)
+
+        true_rows, false_rows = self.__partition(dataset, best_criteria)
+        true_branch = self.__build_tree(true_rows)
+        false_branch = self.__build_tree(false_rows)
+
+        return DecisionNode(best_criteria, true_branch, false_branch)
+
+    def __partition(self, dataset, criteria):
+        true_rows, false_rows = [], []
+        for example in dataset:
+            if criteria.match(example):
+                true_rows.append(example)
+            else:
+                false_rows.append(example)
+
+        return true_rows, false_rows
+
+    def __gini(self, dataset):
+        class_count = class_count(dataset)
+        prob_of_label = 0
+        for lbl in class_count:
+            prob_of_label = prob_of_label + (class_count[lbl] / float(len(dataset))) ** 2
+
+        return prob_of_label
+
+    def __find_best_criteria(self, dataset):
+        col_count = len(dataset[0]) - 1
+        best_criteria = None
+        best_score = 0
+
+        for col in range(col_count):
+            distinct_value = set([ex[col] for ex in dataset])
+            for val in distinct_value:
+                criteria = Criteria(col, val)
+                true_rows, false_rows = self.__partition(dataset, criteria)
+                if len(true_rows) == 0 or len(false_rows) == 0:
+                    continue
+                partition_1_score = self.__gini(true_rows)
+                partition_2_score = self.__gini(false_rows)
+                weighted_score = len(true_rows) / len(dataset) * partition_1_score + len(false_rows) /  len(dataset) * partition_2_score
+                if weighted_score > best_score:
+                    best_criteria = criteria
+                    best_score = weighted_score
+
+        return best_score, best_criteria
+
     def fit(self, x, y):
-        pass
+        dataset = np.column_stack(x, y)
+        self.decision_node = self.__build_tree(dataset)
 
     def predict(self, x):
-        pass
-
-    def __gaussian_distribution(self, mean, var, x):
-        pass
+        if isinstance(self.decision_node, Leaf):
+            return self.decision_node.predictions
+        elif self.decision_node.criteria.match(x):
+            return self.predict(x, self.decision_node.true_rows)
+        else:
+            return self.predict(x, self.decision_node.false_rows)
 
 
 # Load dataset
